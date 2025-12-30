@@ -3,9 +3,9 @@ import random
 import settings
 
 class Bullet(pygame.sprite.Sprite):
-	def __init__(self, x, y):
+	def __init__(self, x, y, theme):
 		super().__init__()
-
+		self.theme = theme
 		self.image = pygame.Surface((5, 5), pygame.SRCALPHA)
 		self.image.fill((0, 0, 0, 0))
 		self.color = (100, 255, 255)
@@ -19,3 +19,14 @@ class Bullet(pygame.sprite.Sprite):
 		self.rect.y += self.speed
 		if self.rect.bottom < 0:
 			self.kill()
+
+	def update_theme(self, theme):
+		self.theme = theme
+
+	def draw(self, surface):
+		if self.theme:
+			color = self.theme.color("bullet")
+		else:
+			color = (100, 255, 255)  # Fallback cyan
+		
+		pygame.draw.rect(surface, color, self.rect)

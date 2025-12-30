@@ -8,7 +8,7 @@ from player import Player
 from enemy import Enemy
 from bullet import Bullet
 from enum import Enum, auto
-from themes import THEMES
+from themes import THEMES, DARK_THEME, LIGHT_THEME
 
 class GameState(Enum):
 	START = auto(),
@@ -38,10 +38,15 @@ class Game:
 		self.draw_count = 0
 		self.event_count = 0
 
+		self.cycle_time = 0
+		self.day_length = 30000
+		self.theme = random.choice(THEMES)
+		self.is_day = True if self.theme.name == "light" else False
+
 		self.all_sprites = pygame.sprite.Group()
 		self.enemies = pygame.sprite.Group()
 		self.bullets = pygame.sprite.Group()
-		self.player = Player(160, 400)
+		self.player = Player(160, 400, self.theme)
 		self.all_sprites.add(self.player)
 
 		self.score = 0
@@ -51,13 +56,6 @@ class Game:
 		self.last_hit = 0
 		self.invincible_duration = 1000
 		self.spawn_delay = 1000
-
-		self.cycle_time = 0
-		self.day_length = 30000
-		self.is_day = False
-		self.background_day = (180, 210, 240)
-		self.background_night = (20, 20, 40)
-		self.brightness = 0
 
 	def handle_events(self):
 		for event in pygame.event.get():
@@ -110,7 +108,7 @@ class Game:
 	def spawn_enemies(self):
 		current_time = pygame.time.get_ticks()
 		if (current_time - self.last_spawn) > self.spawn_delay:
-			enemy = Enemy(random.randint(5, 315), -20)
+			enemy = Enemy(random.randint(5, 315), -20, self.theme)
 			self.all_sprites.add(enemy)
 			self.enemies.add(enemy)
 			self.last_spawn = current_time
@@ -119,7 +117,7 @@ class Game:
 		tip_x = self.player.rect.centerx
 		tip_y = self.player.rect.top + 1
 
-		bullet = Bullet(tip_x, tip_y)
+		bullet = Bullet(tip_x, tip_y, self.theme)
 		self.all_sprites.add(bullet)
 		self.bullets.add(bullet)
 
@@ -135,21 +133,6 @@ class Game:
 		self.player = Player(400, 300)
 		self.all_sprites.add(self.player)
 		self.set_state(GameState.PLAYING, True, True)
-
-	def get_background_color(self):
-		return self.background_day if self.is_day else self.background_night
-
-	def adjust_color(self, base_color, is_entity_light=True):
-		"""
-			is_entity_light=True is for players/bullets (they get brighter at night).
-			is_entity_light=False is for asteroids (they get darker at night).
-		"""
-		r, g, b = base_color
-		if is_entity_light:
-			factor = 1.3 if not self.is_day else 1.0
-		else:
-			factor = 0.7 if not self.is_day else 1.0
-		return(min(255, int(r * factor)), min(255, int(g * factor)), min(255, int(b * factor)))
 
 	def update(self):
 		if not self.running or self.state != GameState.PLAYING:
@@ -183,41 +166,32 @@ class Game:
 					print(f"Score: {self.score}")
 					print(f"High score: {self.high_score}")
 
+		old_day_state = self.is_day
 		self.cycle_time = (self.cycle_time + 1) % self.day_length
 		self.is_day = self.cycle_time < (self.day_length // 2)
 
-		if self.is_day:
-			progress = self.cycle_time / (self.day_length // 2)
-			self.brightness = (0.5 * progress) + 0.5
-		else:
-			progress = self.cycle_time / (self.day_length // 2)
-			self.brightness = 1.0 - (progress * 0.5)
+		if old_day_state != self.is_day:
+			self.theme = LIGHT_THEME if self.is_day else DARK_THEME
+			self.overlay_global.on_theme_change(self.theme)
+			print(f"Switched to {'DAY' if self.is_day else 'NIGHT'} ({self.theme.name} theme)")
 
 		self.update_count += 1
 		#print(f"Update Count: {self.update_count}")
 
 	def draw(self):
-		self.screen.fill(self.get_background_color())
+		bg_color = self.theme.color("background")
+		self.screen.fill(bg_color)
+		
 		if self.state != GameState.START:
+			current_time = pygame.time.get_ticks()
+
 			for sprite in self.all_sprites:
 				if hasattr(sprite, 'draw'):
 					if sprite == self.player:
-						current_time = pygame.time.get_ticks()
 						is_invincible = (current_time - self.last_hit) < self.invincible_duration
-						player_color = self.adjust_color(self.player.color, is_entity_light=True)
-						sprite.draw(self.screen, is_invincible, current_time, player_color)
+						sprite.draw(self.screen, is_invincible, current_time)
 					else:
-						if isinstance(sprite, Enemy):
-							enemy_color = self.adjust_color(sprite.color, is_entity_light=False)
-							temp_surf = pygame.Surface(sprite.image.get_size(), pygame.SRCALPHA)
-							radius = sprite.image.get_width() // 2
-							pygame.draw.circle(temp_surf, enemy_color, (radius, radius), radius)
-							self.screen.blit(temp_surf, sprite.rect)
-						elif isinstance(sprite, Bullet):
-							bullet_color = self.adjust_color(sprite.color, is_entity_light=True)
-							pygame.draw.rect(self.screen, bullet_color, sprite.rect)
-						else:
-							sprite.draw(self.screen)
+						sprite.draw(self.screen)
 				else:
 					self.all_sprites.draw(self.screen)
 

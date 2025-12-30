@@ -5,16 +5,16 @@ class Player(pygame.sprite.Sprite):
 	def __init__(self, x, y):
 		super().__init__()
 
-		self.image = pygame.Surface((12, 12), pygame.SRCALPHA)
+		self.image = pygame.Surface((14, 14), pygame.SRCALPHA)
 		self.image.fill((0, 0, 0, 0))
 
 		self.rect = self.image.get_rect(center=(x, y))
 		self.old_rect = self.rect.copy()
 		self.color = (0, 0, 255)
 		self.triangle_points = [
-			(6, 1),
-			(2, 10),
-			(10, 10)
+			(7, 2), # Top point.
+			(3, 12), # Bottom-left point.
+			(11, 12) #Bottom-right point.
 		]
 
 	def update(self, keys):
@@ -31,7 +31,10 @@ class Player(pygame.sprite.Sprite):
 
 		self.rect.clamp_ip(pygame.Rect(0, 0, settings.WIDTH, settings.HEIGHT))
 
-	def draw(self, surface):
+	def draw(self, surface, is_invincible=False, current_time=0, current_color=None):
+		draw_color = current_color if current_color else self.color
 		absolute_points = [(self.rect.x + x, self.rect.y + y) for (x, y) in self.triangle_points]
-		pygame.draw.polygon(surface, self.color, absolute_points)
+
+		if not is_invincible or (current_time // 200) % 2 == 0: 
+			pygame.draw.polygon(surface, draw_color, absolute_points)
 		#pygame.draw.rect(surface, (255, 255, 255), self.rect, 1) # DEBUG

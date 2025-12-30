@@ -6,6 +6,7 @@ import settings
 from overlay import GlobalOverlayHandler
 from player import Player
 from enemy import Enemy
+from bullet import Bullet
 from enum import Enum, auto
 from themes import THEMES
 
@@ -39,12 +40,24 @@ class Game:
 
 		self.all_sprites = pygame.sprite.Group()
 		self.enemies = pygame.sprite.Group()
+		self.bullets = pygame.sprite.Group()
 		self.player = Player(160, 400)
 		self.all_sprites.add(self.player)
+
 		self.score = 0
+		self.high_score = 0
 		self.lives = 3
 		self.last_spawn = 0
+		self.last_hit = 0
+		self.invincible_duration = 1000
 		self.spawn_delay = 1000
+
+		self.cycle_time = 0
+		self.day_length = 30000
+		self.is_day = False
+		self.background_day = (180, 210, 240)
+		self.background_night = (20, 20, 40)
+		self.brightness = 0
 
 	def handle_events(self):
 		for event in pygame.event.get():
@@ -53,13 +66,25 @@ class Game:
 
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_q: 
-					if self.state != GameState.PLAYING: self.end_game()
+					if self.state != GameState.PLAYING: 
+						self.end_game()
 				if event.key == pygame.K_RETURN:
-					if self.state == GameState.START: self.set_state(GameState.PLAYING, True)
-					elif self.state == GameState.GAME_OVER or self.state == GameState.GAME_WIN: self.restart_run()
+					if self.state == GameState.START: 
+						self.set_state(GameState.PLAYING, True)
+					elif self.state == GameState.GAME_OVER or self.state == GameState.GAME_WIN: 
+						self.restart_run()
 				if event.key == pygame.K_ESCAPE:
-					if self.state == GameState.PLAYING: self.set_state(GameState.PAUSED, True)
-					elif self.state == GameState.PAUSED: self.set_state(GameState.PLAYING, True)
+					if self.state == GameState.PLAYING: 
+						self.set_state(GameState.PAUSED, True)
+					elif self.state == GameState.PAUSED: 
+						self.set_state(GameState.PLAYING, True)
+				if event.key == pygame.K_SPACE:
+					if self.state == GameState.PLAYING:
+						self.shoot_bullet()
+
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				if self.state == GameState.PLAYING:
+					self.shoot_bullet()
 
 			if event.type == pygame.WINDOWFOCUSLOST:
 				print("Window lost focus.")
@@ -84,15 +109,24 @@ class Game:
 
 	def spawn_enemies(self):
 		current_time = pygame.time.get_ticks()
-		if current_time - self.last_spawn > self.spawn_delay:
+		if (current_time - self.last_spawn) > self.spawn_delay:
 			enemy = Enemy(random.randint(5, 315), -20)
 			self.all_sprites.add(enemy)
 			self.enemies.add(enemy)
 			self.last_spawn = current_time
 
+	def shoot_bullet(self):
+		tip_x = self.player.rect.centerx
+		tip_y = self.player.rect.top + 1
+
+		bullet = Bullet(tip_x, tip_y)
+		self.all_sprites.add(bullet)
+		self.bullets.add(bullet)
+
 	def restart_run(self):
 		self.all_sprites.empty()
 		self.enemies.empty()
+		self.bullets.empty()
 
 		self.score = 0
 		self.lives = 3
@@ -102,10 +136,24 @@ class Game:
 		self.all_sprites.add(self.player)
 		self.set_state(GameState.PLAYING, True, True)
 
+	def get_background_color(self):
+		return self.background_day if self.is_day else self.background_night
+
+	def adjust_color(self, base_color, is_entity_light=True):
+		"""
+			is_entity_light=True is for players/bullets (they get brighter at night).
+			is_entity_light=False is for asteroids (they get darker at night).
+		"""
+		r, g, b = base_color
+		if is_entity_light:
+			factor = 1.3 if not self.is_day else 1.0
+		else:
+			factor = 0.7 if not self.is_day else 1.0
+		return(min(255, int(r * factor)), min(255, int(g * factor)), min(255, int(b * factor)))
+
 	def update(self):
 		if not self.running or self.state != GameState.PLAYING:
 			return
-
 		keys = pygame.key.get_pressed()
 
 		for sprite in self.all_sprites:
@@ -116,20 +164,63 @@ class Game:
 					sprite.update()
 
 		self.spawn_enemies()
-		if pygame.sprite.spritecollide(self.player, self.enemies, False):
-			self.set_state(GameState.GAME_OVER, True, True)
+
+		hits = pygame.sprite.groupcollide(self.bullets, self.enemies, True, True)
+		for bullet, hit_enemies in hits.items():
+			for enemy in hit_enemies:
+				self.score += enemy.score
+				self.high_score = self.score
+
+		current_time = pygame.time.get_ticks()
+		if (current_time - self.last_hit) > self.invincible_duration:
+			hits = pygame.sprite.spritecollide(self.player, self.enemies, False)
+			if hits:
+				self.lives -= 1
+				self.last_hit = current_time
+				print(f"Lives left: {self.lives}")
+				if self.lives <= 0:
+					self.set_state(GameState.GAME_OVER, True, True)
+					print(f"Score: {self.score}")
+					print(f"High score: {self.high_score}")
+
+		self.cycle_time = (self.cycle_time + 1) % self.day_length
+		self.is_day = self.cycle_time < (self.day_length // 2)
+
+		if self.is_day:
+			progress = self.cycle_time / (self.day_length // 2)
+			self.brightness = (0.5 * progress) + 0.5
+		else:
+			progress = self.cycle_time / (self.day_length // 2)
+			self.brightness = 1.0 - (progress * 0.5)
 
 		self.update_count += 1
 		#print(f"Update Count: {self.update_count}")
 
 	def draw(self):
-		self.screen.fill(self.theme.color("background"))
+		self.screen.fill(self.get_background_color())
 		if self.state != GameState.START:
 			for sprite in self.all_sprites:
 				if hasattr(sprite, 'draw'):
-					sprite.draw(self.screen)
+					if sprite == self.player:
+						current_time = pygame.time.get_ticks()
+						is_invincible = (current_time - self.last_hit) < self.invincible_duration
+						player_color = self.adjust_color(self.player.color, is_entity_light=True)
+						sprite.draw(self.screen, is_invincible, current_time, player_color)
+					else:
+						if isinstance(sprite, Enemy):
+							enemy_color = self.adjust_color(sprite.color, is_entity_light=False)
+							temp_surf = pygame.Surface(sprite.image.get_size(), pygame.SRCALPHA)
+							radius = sprite.image.get_width() // 2
+							pygame.draw.circle(temp_surf, enemy_color, (radius, radius), radius)
+							self.screen.blit(temp_surf, sprite.rect)
+						elif isinstance(sprite, Bullet):
+							bullet_color = self.adjust_color(sprite.color, is_entity_light=True)
+							pygame.draw.rect(self.screen, bullet_color, sprite.rect)
+						else:
+							sprite.draw(self.screen)
 				else:
 					self.all_sprites.draw(self.screen)
+
 		self.overlay_global.draw(self.screen)
 		pygame.display.flip()
 		self.draw_count += 1

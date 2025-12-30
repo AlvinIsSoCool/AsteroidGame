@@ -24,7 +24,6 @@ class Theme:
 DARK_THEME = Theme(
 	name = "dark",
 	colors = {
-		"background": (15, 15, 18),
 		"text_primary": (220, 220, 220),
 		"text_secondary": (160, 160, 160),
 		"overlay_start": (0, 0, 0, 120),
@@ -42,7 +41,6 @@ DARK_THEME = Theme(
 LIGHT_THEME = Theme(
 	name = "light",
 	colors = {
-		"background": (245, 245, 245),
 		"text_primary": (30, 30, 30),
 		"text_secondary": (80, 80, 80),
 		"overlay_start": (255, 255, 255, 160),

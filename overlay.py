@@ -90,7 +90,7 @@ class LocalOverlayHandler(OverlayHandler):
 	def __init__(self, surface, theme):
 		super().__init__(surface, theme)
 
-	def draw_coordinates(self, em):
+	def draw_coordinates(self):
 		self.surface.fill((0, 0, 0, 0))
 
 		p, x = em.get_player(), em.get_enemy()

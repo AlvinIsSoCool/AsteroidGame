@@ -1,0 +1,3 @@
+WIDTH = 320
+HEIGHT = 480
+FPS = 60

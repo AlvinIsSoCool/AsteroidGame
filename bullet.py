@@ -3,7 +3,7 @@ import random
 import settings
 
 class Bullet(pygame.sprite.Sprite):
-	def __init__(self, x, y, theme):
+	def __init__(self, x, y, theme, elapsed_ms=0):
 		super().__init__()
 		self.theme = theme
 		self.image = pygame.Surface((5, 5), pygame.SRCALPHA)
@@ -12,7 +12,11 @@ class Bullet(pygame.sprite.Sprite):
 		pygame.draw.rect(self.image, self.color, (0, 0, 5, 5))
 
 		self.rect = self.image.get_rect(center=(x, y))
-		self.speed = -8
+		minutes_played = elapsed_ms / 60000
+		speed_multiplier = min(settings.BASE_SPEED + (minutes_played * settings.SPEED_MULTIPLIER_PROGRESS), settings.SPEED_MULTIPLIER_CAP)
+		drift_multiplier = min(settings.BASE_DRIFT + (minutes_played * settings.DRIFT_MULTIPLIER_PROGRESS), settings.DRIFT_MULTIPLIER_CAP)
+		self.speed = random.uniform(-2.5, -5.0) * speed_multiplier
+		self.drift = random.uniform(-0.3, 0.3) * drift_multiplier
 		self.growing = True
 
 	def update(self):
@@ -20,13 +24,8 @@ class Bullet(pygame.sprite.Sprite):
 		if self.rect.bottom < 0:
 			self.kill()
 
-	def update_theme(self, theme):
-		self.theme = theme
-
 	def draw(self, surface):
 		if self.theme:
 			color = self.theme.color("bullet")
-		else:
-			color = (100, 255, 255)  # Fallback cyan
-		
+
 		pygame.draw.rect(surface, color, self.rect)

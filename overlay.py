@@ -27,7 +27,7 @@ class GlobalOverlayHandler(OverlayHandler):
 	def draw_start(self):
 		self.surface.fill(self.theme.color("overlay_start"))
 
-		text1 = self.theme.font("large").render("Maze N' Chase", True, self.theme.color("text_primary"))
+		text1 = self.theme.font("large").render("Asteroid Game", True, self.theme.color("text_primary"))
 		text2 = self.theme.font("medium").render("Press ENTER to start", True, self.theme.color("text_secondary"))
 		text3 = self.theme.font("medium").render("Press Q to quit", True, self.theme.color("text_secondary"))
 
@@ -54,6 +54,7 @@ class GlobalOverlayHandler(OverlayHandler):
 		self.surface.blit(text1, rect1)
 		self.surface.blit(text2, rect2)
 		self.surface.blit(text3, rect3)
+		print(self.theme.name)
 		self.on_state_change()
 
 	def draw_game_over(self):

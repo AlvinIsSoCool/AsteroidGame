@@ -24,6 +24,11 @@ class Theme:
 DARK_THEME = Theme(
 	name = "dark",
 	colors = {
+		"background": (20, 20, 40),
+		"player": (100, 200, 255),
+		"bullet": (100, 255, 255),
+		"asteroid_big": (180, 100, 80),
+		"asteroid_small": (220, 140, 100),
 		"text_primary": (220, 220, 220),
 		"text_secondary": (160, 160, 160),
 		"overlay_start": (0, 0, 0, 120),
@@ -32,15 +37,20 @@ DARK_THEME = Theme(
 		"overlay_game_win": (0, 60, 30, 140)
 	},
 	fonts = {
-		"large": (None, 70, False, False),
-		"medium": (None, 30, False, False),
-		"small": (None, 20, False, False)
+		"large": (None, 50, False, False),
+		"medium": (None, 25, False, False),
+		"small": (None, 15, False, False)
 	}
 )
 
 LIGHT_THEME = Theme(
 	name = "light",
 	colors = {
+		"background": (180, 210, 240),
+		"player": (80, 160, 220),
+		"bullet": (0, 0, 255),
+		"asteroid_big": (200, 130, 100),
+		"asteroid_small": (240, 160, 120),
 		"text_primary": (30, 30, 30),
 		"text_secondary": (80, 80, 80),
 		"overlay_start": (255, 255, 255, 160),
@@ -49,9 +59,9 @@ LIGHT_THEME = Theme(
 		"overlay_game_win": (100, 200, 140, 140)
 	},
 	fonts = {
-		"large": (None, 70, False, False),
-		"medium": (None, 30, False, False),
-		"small": (None, 20, False, False)
+		"large": (None, 50, False, False),
+		"medium": (None, 25, False, False),
+		"small": (None, 15, False, False)
 	}
 )
 

@@ -21,7 +21,7 @@ class Game:
 	def __init__(self):
 		pygame.init()
 		self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
-		pygame.display.set_caption("Test Game v1")
+		pygame.display.set_caption("Asteroid Game v1.0.0")
 
 		self.fps = settings.FPS
 		self.clock = pygame.time.Clock()
@@ -38,10 +38,10 @@ class Game:
 		self.draw_count = 0
 		self.event_count = 0
 
-		self.cycle_time = 0
-		self.day_length = 30000
-		self.theme = random.choice(THEMES)
-		self.is_day = True if self.theme.name == "light" else False
+		self.day_duration = settings.DAY_DURATION
+		self.day_length = self.day_duration * self.fps * 2
+		self.is_day = True if self.theme.name == LIGHT_THEME.name else False
+		self.cycle_time = 0 if self.is_day else self.day_length // 2
 
 		self.all_sprites = pygame.sprite.Group()
 		self.enemies = pygame.sprite.Group()
@@ -49,13 +49,16 @@ class Game:
 		self.player = Player(160, 400, self.theme)
 		self.all_sprites.add(self.player)
 
+		self.game_start_time = pygame.time.get_ticks()
 		self.score = 0
 		self.high_score = 0
-		self.lives = 3
-		self.last_spawn = 0
+		self.lives = settings.LIVES
+		self.enemy_last_spawn = 0
+		self.bullet_last_spawn = 0
 		self.last_hit = 0
-		self.invincible_duration = 1000
-		self.spawn_delay = 1000
+		self.invincible_duration = 2000
+		self.bullet_spawn_delay = 500
+		self.enemy_spawn_delay = settings.ENEMY_SPAWN_DELAY
 
 	def handle_events(self):
 		for event in pygame.event.get():
@@ -63,8 +66,8 @@ class Game:
 				self.running = False
 
 			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_q: 
-					if self.state != GameState.PLAYING: 
+				if event.key == pygame.K_q:
+					if self.state != GameState.PLAYING:
 						self.end_game()
 				if event.key == pygame.K_RETURN:
 					if self.state == GameState.START: 
@@ -72,9 +75,9 @@ class Game:
 					elif self.state == GameState.GAME_OVER or self.state == GameState.GAME_WIN: 
 						self.restart_run()
 				if event.key == pygame.K_ESCAPE:
-					if self.state == GameState.PLAYING: 
+					if self.state == GameState.PLAYING:
 						self.set_state(GameState.PAUSED, True)
-					elif self.state == GameState.PAUSED: 
+					elif self.state == GameState.PAUSED:
 						self.set_state(GameState.PLAYING, True)
 				if event.key == pygame.K_SPACE:
 					if self.state == GameState.PLAYING:
@@ -107,30 +110,40 @@ class Game:
 
 	def spawn_enemies(self):
 		current_time = pygame.time.get_ticks()
-		if (current_time - self.last_spawn) > self.spawn_delay:
-			enemy = Enemy(random.randint(5, 315), -20, self.theme)
+		elapsed_ms = current_time - self.game_start_time
+		minutes_played = elapsed_ms / 60000
+		speed_multiplier = min(settings.BASE_SPEED + (minutes_played * settings.SPEED_MULTIPLIER_PROGRESS), settings.SPEED_MULTIPLIER_CAP)
+		self.enemy_spawn_delay = max(300, self.enemy_spawn_delay / speed_multiplier)
+
+		if (current_time - self.enemy_last_spawn) > self.enemy_spawn_delay:
+			enemy = Enemy(random.randint(5, 315), -20, self.theme, elapsed_ms)
 			self.all_sprites.add(enemy)
 			self.enemies.add(enemy)
-			self.last_spawn = current_time
+			self.enemy_last_spawn = current_time
 
 	def shoot_bullet(self):
-		tip_x = self.player.rect.centerx
-		tip_y = self.player.rect.top + 1
+		current_time = pygame.time.get_ticks()
+		if (current_time - self.bullet_last_spawn) > self.bullet_spawn_delay:
+			tip_x = self.player.rect.centerx
+			tip_y = self.player.rect.top + 1
+			elapsed_ms = current_time - self.game_start_time
 
-		bullet = Bullet(tip_x, tip_y, self.theme)
-		self.all_sprites.add(bullet)
-		self.bullets.add(bullet)
+			bullet = Bullet(tip_x, tip_y, self.theme, elapsed_ms)
+			self.all_sprites.add(bullet)
+			self.bullets.add(bullet)
+			self.bullet_last_spawn = current_time
 
 	def restart_run(self):
 		self.all_sprites.empty()
 		self.enemies.empty()
 		self.bullets.empty()
 
+		self.game_start_time = pygame.time.get_ticks()
 		self.score = 0
-		self.lives = 3
+		self.lives = settings.LIVES
 		self.last_spawn = 0
 
-		self.player = Player(400, 300)
+		self.player = Player(160, 400, self.theme)
 		self.all_sprites.add(self.player)
 		self.set_state(GameState.PLAYING, True, True)
 
@@ -151,24 +164,30 @@ class Game:
 		hits = pygame.sprite.groupcollide(self.bullets, self.enemies, True, True)
 		for bullet, hit_enemies in hits.items():
 			for enemy in hit_enemies:
-				self.score += enemy.score
-				self.high_score = self.score
+				if self.lives != -1:
+					self.score += enemy.score
+					self.high_score = self.score
 
 		current_time = pygame.time.get_ticks()
 		if (current_time - self.last_hit) > self.invincible_duration:
 			hits = pygame.sprite.spritecollide(self.player, self.enemies, False)
 			if hits:
-				self.lives -= 1
-				self.last_hit = current_time
-				print(f"Lives left: {self.lives}")
-				if self.lives <= 0:
-					self.set_state(GameState.GAME_OVER, True, True)
-					print(f"Score: {self.score}")
-					print(f"High score: {self.high_score}")
+				if self.lives != -1:
+					self.lives -= 1
+					self.last_hit = current_time
+					print(f"Lives left: {self.lives}")
+					if self.lives <= 0:
+						self.set_state(GameState.GAME_OVER, True, True)
+						print(f"Score: {self.score}")
+						print(f"High score: {self.high_score}")
+				else:
+					self.last_hit = current_time
+					print(f"Lives left: INF")
 
 		old_day_state = self.is_day
 		self.cycle_time = (self.cycle_time + 1) % self.day_length
 		self.is_day = self.cycle_time < (self.day_length // 2)
+		#print(f"Cycle time: {self.cycle_time}")
 
 		if old_day_state != self.is_day:
 			self.theme = LIGHT_THEME if self.is_day else DARK_THEME
@@ -179,9 +198,8 @@ class Game:
 		#print(f"Update Count: {self.update_count}")
 
 	def draw(self):
-		bg_color = self.theme.color("background")
-		self.screen.fill(bg_color)
-		
+		self.screen.fill(self.theme.color("background"))
+
 		if self.state != GameState.START:
 			current_time = pygame.time.get_ticks()
 

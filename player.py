@@ -35,8 +35,6 @@ class Player(pygame.sprite.Sprite):
 	def draw(self, surface, is_invincible=False, current_time=0):
 		if self.theme:
 			draw_color = self.theme.color("player")
-		else:
-			draw_color = (0, 0, 255)  # Fallback blue
 
 		absolute_points = [(self.rect.x + x, self.rect.y + y) for (x, y) in self.triangle_points]
 		if not is_invincible or (current_time // 200) % 2 == 0:

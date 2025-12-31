@@ -3,7 +3,7 @@ import sys
 import random
 import settings
 
-from overlay import GlobalOverlayHandler
+from overlay import GlobalOverlayHandler, LocalOverlayHandler
 from player import Player
 from enemy import Enemy
 from bullet import Bullet
@@ -15,7 +15,6 @@ class GameState(Enum):
 	PAUSED = auto(),
 	PLAYING = auto(),
 	GAME_OVER = auto()
-	GAME_WIN = auto()
 
 class Game:
 	def __init__(self):
@@ -29,6 +28,7 @@ class Game:
 		self.state = None
 		self.theme = random.choice(THEMES)
 		self.overlay_global = GlobalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
+		self.overlay_local = LocalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
 		print(f"Theme: {self.theme.name}")
 
 		self.set_state(GameState.START, True, True)
@@ -50,14 +50,15 @@ class Game:
 		self.all_sprites.add(self.player)
 
 		self.game_start_time = pygame.time.get_ticks()
+		self.score_changed = True
 		self.score = 0
 		self.high_score = 0
 		self.lives = settings.LIVES
 		self.enemy_last_spawn = 0
 		self.bullet_last_spawn = 0
 		self.last_hit = 0
-		self.invincible_duration = 2000
-		self.bullet_spawn_delay = 500
+		self.invincible_duration = 1500
+		self.bullet_spawn_delay = 400
 		self.enemy_spawn_delay = settings.ENEMY_SPAWN_DELAY
 
 	def handle_events(self):
@@ -142,6 +143,8 @@ class Game:
 		self.score = 0
 		self.lives = settings.LIVES
 		self.last_spawn = 0
+		self.score_changed = True
+		self.lives_changed = True
 
 		self.player = Player(160, 400, self.theme)
 		self.all_sprites.add(self.player)
@@ -166,7 +169,9 @@ class Game:
 			for enemy in hit_enemies:
 				if self.lives != -1:
 					self.score += enemy.score
-					self.high_score = self.score
+					if self.score > self.high_score:
+						self.high_score = self.score
+					self.score_changed = True
 
 		current_time = pygame.time.get_ticks()
 		if (current_time - self.last_hit) > self.invincible_duration:
@@ -174,20 +179,16 @@ class Game:
 			if hits:
 				if self.lives != -1:
 					self.lives -= 1
-					self.last_hit = current_time
 					print(f"Lives left: {self.lives}")
 					if self.lives <= 0:
 						self.set_state(GameState.GAME_OVER, True, True)
-						print(f"Score: {self.score}")
-						print(f"High score: {self.high_score}")
-				else:
-					self.last_hit = current_time
-					print(f"Lives left: INF")
+
+				self.last_hit = current_time
+				self.lives_changed = True
 
 		old_day_state = self.is_day
 		self.cycle_time = (self.cycle_time + 1) % self.day_length
 		self.is_day = self.cycle_time < (self.day_length // 2)
-		#print(f"Cycle time: {self.cycle_time}")
 
 		if old_day_state != self.is_day:
 			self.theme = LIGHT_THEME if self.is_day else DARK_THEME
@@ -213,7 +214,13 @@ class Game:
 				else:
 					self.all_sprites.draw(self.screen)
 
+		if self.score_changed or self.lives_changed:
+			self.overlay_local.draw_info(self)
+			self.score_changed = False
+			self.lives_changed = False
+
 		self.overlay_global.draw(self.screen)
+		self.overlay_local.draw(self.screen)
 		pygame.display.flip()
 		self.draw_count += 1
 
@@ -224,9 +231,8 @@ class Game:
 			print("State changed.")
 
 			if self.state == GameState.START: self.overlay_global.draw_start()
-			elif self.state == GameState.PAUSED: self.overlay_global.draw_pause_menu()
-			elif self.state == GameState.GAME_OVER: self.overlay_global.draw_game_over()
-			elif self.state == GameState.GAME_WIN: self.overlay_global.draw_game_won()
+			elif self.state == GameState.PAUSED: self.overlay_global.draw_pause_menu(self)
+			elif self.state == GameState.GAME_OVER: self.overlay_global.draw_game_over(self)
 
 	def end_game(self):
 		self.running = False

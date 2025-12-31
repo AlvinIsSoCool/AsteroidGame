@@ -24,11 +24,11 @@ class Theme:
 DARK_THEME = Theme(
 	name = "dark",
 	colors = {
-		"background": (20, 20, 40),
-		"player": (100, 200, 255),
-		"bullet": (100, 255, 255),
-		"asteroid_big": (180, 100, 80),
-		"asteroid_small": (220, 140, 100),
+		"background": (10, 10, 10),
+		"player": (0, 150, 255),
+		"bullet": (31, 81, 255),
+		"asteroid_big": (110, 38, 14),
+		"asteroid_small": (165, 42, 42),
 		"text_primary": (220, 220, 220),
 		"text_secondary": (160, 160, 160),
 		"overlay_start": (0, 0, 0, 120),
@@ -46,11 +46,11 @@ DARK_THEME = Theme(
 LIGHT_THEME = Theme(
 	name = "light",
 	colors = {
-		"background": (180, 210, 240),
-		"player": (80, 160, 220),
-		"bullet": (0, 0, 255),
-		"asteroid_big": (200, 130, 100),
-		"asteroid_small": (240, 160, 120),
+		"background": (255, 250, 250),
+		"player": (0, 0, 139),
+		"bullet": (63, 0, 255),
+		"asteroid_big": (123, 63, 0),
+		"asteroid_small": (160, 40, 40),
 		"text_primary": (30, 30, 30),
 		"text_secondary": (80, 80, 80),
 		"overlay_start": (255, 255, 255, 160),

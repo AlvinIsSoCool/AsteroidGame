@@ -1,9 +1,9 @@
 WIDTH = 320
 HEIGHT = 480
-FPS = 60
+FPS = 30
 
-""" Number of seconds the whole day lasts for (eg: 10 seconds).
-	Day/Night switching happens at half of this time (eg: 5 seconds).
+""" Number of seconds the whole day lasts for. (Default: 300 seconds or 5 minutes).
+	Day/Night switching happens at half of this time (Default: 150 seconds or 2.5 minutes).
 """
 DAY_DURATION = 10
 
@@ -28,7 +28,7 @@ DAY_DURATION = 10
 		  Difficulty can scale a lot, if these values are changed at random. Speed multiplication also affects enemy spawn delay.
 		  Player speed is not affected by these settings. They are internal values that are not configurable.
 """
-LIVES=-1
+LIVES=5
 ENEMY_SPAWN_DELAY=1000
 BASE_SPEED=1.0
 SPEED_MULTIPLIER_PROGRESS=0.05

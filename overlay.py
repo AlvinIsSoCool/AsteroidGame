@@ -31,77 +31,72 @@ class GlobalOverlayHandler(OverlayHandler):
 		text2 = self.theme.font("medium").render("Press ENTER to start", True, self.theme.color("text_secondary"))
 		text3 = self.theme.font("medium").render("Press Q to quit", True, self.theme.color("text_secondary"))
 
-		rect1 = text1.get_rect(center=(settings.WIDTH // 2, 120))
-		rect2 = text2.get_rect(center=(settings.WIDTH // 2, 250))
-		rect3 = text3.get_rect(center=(settings.WIDTH // 2, 278))
+		rect1 = text1.get_rect(center=(settings.WIDTH // 2, 140))
+		rect2 = text2.get_rect(center=(settings.WIDTH // 2, 265))
+		rect3 = text3.get_rect(center=(settings.WIDTH // 2, 287))
 
 		self.surface.blit(text1, rect1)
 		self.surface.blit(text2, rect2)
 		self.surface.blit(text3, rect3)
 		self.on_state_change()
 
-	def draw_pause_menu(self):
+	def draw_pause_menu(self, game):
 		self.surface.fill(self.theme.color("overlay_pause"))
 
 		text1 = self.theme.font("large").render("GAME PAUSED", True, self.theme.color("text_primary"))
-		text2 = self.theme.font("medium").render("Press ESC to continue", True, self.theme.color("text_secondary"))
-		text3 = self.theme.font("medium").render("Press Q to quit", True, self.theme.color("text_secondary"))
+		text2 = self.theme.font("medium").render(f"Score: {game.score}", True, self.theme.color("text_secondary"))
+		text3 = self.theme.font("medium").render(f"High Score: {game.high_score}", True, self.theme.color("text_secondary"))
+		text4 = self.theme.font("medium").render("Press ESC to continue", True, self.theme.color("text_secondary"))
+		text5 = self.theme.font("medium").render("Press Q to quit", True, self.theme.color("text_secondary"))
 
-		rect1 = text1.get_rect(center=(settings.WIDTH // 2, 120))
-		rect2 = text2.get_rect(center=(settings.WIDTH // 2, 250))
-		rect3 = text3.get_rect(center=(settings.WIDTH // 2, 278))
+		rect1 = text1.get_rect(center=(settings.WIDTH // 2, 140))
+		rect3 = text3.get_rect(center=(settings.WIDTH // 2, 205))
+		rect2 = text2.get_rect(topleft=(rect3.x, rect3.y - 20))
+		rect4 = text4.get_rect(center=(settings.WIDTH // 2, 290))
+		rect5= text5.get_rect(center=(settings.WIDTH // 2, 310))
 
 		self.surface.blit(text1, rect1)
 		self.surface.blit(text2, rect2)
 		self.surface.blit(text3, rect3)
-		print(self.theme.name)
+		self.surface.blit(text4, rect4)
+		self.surface.blit(text5, rect5)
 		self.on_state_change()
 
-	def draw_game_over(self):
+	def draw_game_over(self, game):
 		self.surface.fill(self.theme.color("overlay_game_over"))
-		text1 = self.theme.font("large").render("GAME OVER!", True, self.theme.color("text_primary"))
-		text2 = self.theme.font("medium").render("Press ENTER to respawn", True, self.theme.color("text_secondary"))
-		text3 = self.theme.font("medium").render("Press Q to quit", True, self.theme.color("text_secondary"))
+		text1 = self.theme.font("large").render("GAME OVER", True, self.theme.color("text_primary"))
+		text2 = self.theme.font("medium").render(f"Score: {game.score}", True, self.theme.color("text_secondary"))
+		text3 = self.theme.font("medium").render(f"High Score: {game.high_score}", True, self.theme.color("text_secondary"))
+		text4 = self.theme.font("medium").render("Press ENTER to respawn", True, self.theme.color("text_secondary"))
+		text5 = self.theme.font("medium").render("Press Q to quit", True, self.theme.color("text_secondary"))
 
-		rect1 = text1.get_rect(center=(settings.WIDTH // 2, 120))
-		rect2 = text2.get_rect(center=(settings.WIDTH // 2, 250))
-		rect3 = text3.get_rect(center=(settings.WIDTH // 2, 278))
-
-		self.surface.blit(text1, rect1)
-		self.surface.blit(text2, rect2)
-		self.surface.blit(text3, rect3)
-		self.on_state_change()
-
-	def draw_game_won(self):
-		self.surface.fill(self.theme.color("overlay_game_win"))
-		text1 = self.theme.font("large").render("GAME WON!", True, self.theme.color("text_primary"))
-		text2 = self.theme.font("medium").render("Press ENTER to respawn", True, self.theme.color("text_secondary"))
-		text3 = self.theme.font("medium").render("Press Q to quit", True, self.theme.color("text_secondary"))
-
-		rect1 = text1.get_rect(center=(settings.WIDTH // 2, 120))
-		rect2 = text2.get_rect(center=(settings.WIDTH // 2, 250))
-		rect3 = text3.get_rect(center=(settings.WIDTH // 2, 278))
+		rect1 = text1.get_rect(center=(settings.WIDTH // 2, 140))
+		rect3 = text3.get_rect(center=(settings.WIDTH // 2, 205))
+		rect2 = text2.get_rect(topleft=(rect3.x, rect3.y - 20))
+		rect4 = text4.get_rect(center=(settings.WIDTH // 2, 290))
+		rect5= text5.get_rect(center=(settings.WIDTH // 2, 310))
 
 		self.surface.blit(text1, rect1)
 		self.surface.blit(text2, rect2)
 		self.surface.blit(text3, rect3)
+		self.surface.blit(text4, rect4)
+		self.surface.blit(text5, rect5)
 		self.on_state_change()
 
 class LocalOverlayHandler(OverlayHandler):
 	def __init__(self, surface, theme):
 		super().__init__(surface, theme)
 
-	def draw_coordinates(self):
+	def draw_info(self, game):
 		self.surface.fill((0, 0, 0, 0))
 
-		p, x = em.get_player(), em.get_enemy()
-		px, py = p.rect.topleft
-		xx, xy = x.rect.topleft
-		text1 = self.theme.font("small").render(f"Player1 -> X: {px}, Y: {py}", True, self.theme.color("text_secondary"))
-		text2 = self.theme.font("small").render(f"Enemy1 -> X: {xx}, Y: {xy}", True, self.theme.color("text_secondary"))
-		rect1 = text1.get_rect(topleft=(5, 5))
-		rect2 = text2.get_rect(topleft=(5, 25))
+		text1 = self.theme.font("medium").render(f"Score: {game.score}", True, self.theme.color("text_secondary"))
+		text2 = self.theme.font("medium").render(f"High Score: {game.high_score}", True, self.theme.color("text_secondary"))
+		text3 = self.theme.font("medium").render(f"Lives: {game.lives}", True, self.theme.color("text_secondary"))
+		rect1 = text1.get_rect(topleft=(200, 5))
+		rect2 = text2.get_rect(topleft=(200, 25))
+		rect3 = text2.get_rect(topleft=(200, 45))
 
 		self.surface.blit(text1, rect1)
 		self.surface.blit(text2, rect2)
-		self.dirty = True
+		self.surface.blit(text3, rect3)

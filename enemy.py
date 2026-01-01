@@ -14,12 +14,12 @@ class Enemy(pygame.sprite.Sprite):
 		if self.is_big:
 			self.size = 18
 			self.color = (180, 100, 80)
-			self.score = 200
+			self.score = 2147483647
 			self.speed = random.uniform(0.8, 1.3) * speed_multiplier
 		else:
 			self.size = 14
 			self.color = (220, 140, 100)
-			self.score = 100
+			self.score = 2147483647
 			self.speed = random.uniform(1.5, 3.0) * speed_multiplier
 
 		self.image = pygame.Surface((self.size, self.size), pygame.SRCALPHA)

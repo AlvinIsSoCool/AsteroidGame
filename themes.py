@@ -15,11 +15,25 @@ class Theme:
 	def font(self, key):
 		if key not in self._fonts:
 			path, size, bold, italic = self.font_defs[key]
-			font = pygame.font.Font(path, size)
+			try:
+				font = pygame.font.Font(path, size)
+			except:
+				font = pygame.font.Font(None, size)
 			font.set_bold(bold)
 			font.set_italic(italic)
 			self._fonts[key] = font
 		return self._fonts[key]
+
+	def get_text_size(self, key, text):
+		return self.font(key).size(text)
+
+	def get_text_width(self, key, text):
+		len = self.get_text_size(key, text)[0]
+		print(f"Length: {len}")
+		return len
+
+	def get_text_height(self, key, text):
+		return self.get_text_size(key, text)[1]
 
 DARK_THEME = Theme(
 	name = "dark",

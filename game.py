@@ -71,9 +71,9 @@ class Game:
 					if self.state != GameState.PLAYING:
 						self.end_game()
 				if event.key == pygame.K_RETURN:
-					if self.state == GameState.START: 
+					if self.state == GameState.START:
 						self.set_state(GameState.PLAYING, True)
-					elif self.state == GameState.GAME_OVER or self.state == GameState.GAME_WIN: 
+					elif self.state == GameState.GAME_OVER:
 						self.restart_run()
 				if event.key == pygame.K_ESCAPE:
 					if self.state == GameState.PLAYING:
@@ -181,7 +181,7 @@ class Game:
 					self.lives -= 1
 					print(f"Lives left: {self.lives}")
 					if self.lives <= 0:
-						self.set_state(GameState.GAME_OVER, True, True)
+						self.set_state(GameState.GAME_OVER, True)
 
 				self.last_hit = current_time
 				self.lives_changed = True
@@ -193,7 +193,6 @@ class Game:
 		if old_day_state != self.is_day:
 			self.theme = LIGHT_THEME if self.is_day else DARK_THEME
 			self.overlay_global.on_theme_change(self.theme)
-			print(f"Switched to {'DAY' if self.is_day else 'NIGHT'} ({self.theme.name} theme)")
 
 		self.update_count += 1
 		#print(f"Update Count: {self.update_count}")
@@ -214,13 +213,14 @@ class Game:
 				else:
 					self.all_sprites.draw(self.screen)
 
-		if self.score_changed or self.lives_changed:
-			self.overlay_local.draw_info(self)
-			self.score_changed = False
-			self.lives_changed = False
+		if self.state == GameState.PLAYING:
+			if self.score_changed or self.lives_changed:
+				self.overlay_local.draw_info(self)
+				self.score_changed = False
+				self.lives_changed = False
+			self.overlay_local.draw(self.screen)
 
 		self.overlay_global.draw(self.screen)
-		self.overlay_local.draw(self.screen)
 		pygame.display.flip()
 		self.draw_count += 1
 
@@ -228,7 +228,6 @@ class Game:
 		if (state != self.state and isinstance(state, GameState)) and (force or not self.overlay_global.active) or refresh:
 			self.state = state
 			self.overlay_global.reset()
-			print("State changed.")
 
 			if self.state == GameState.START: self.overlay_global.draw_start()
 			elif self.state == GameState.PAUSED: self.overlay_global.draw_pause_menu(self)

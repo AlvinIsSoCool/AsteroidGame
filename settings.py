@@ -28,11 +28,11 @@ DAY_DURATION = 10
 		  Difficulty can scale a lot, if these values are changed at random. Speed multiplication also affects enemy spawn delay.
 		  Player speed is not affected by these settings. They are internal values that are not configurable.
 """
-LIVES=5
+LIVES=2147483647
 ENEMY_SPAWN_DELAY=1000
 BASE_SPEED=1.0
-SPEED_MULTIPLIER_PROGRESS=0.05
-SPEED_MULTIPLIER_CAP=2.5
+SPEED_MULTIPLIER_PROGRESS=0.1
+SPEED_MULTIPLIER_CAP=3
 BASE_DRIFT=1.0
 DRIFT_MULTIPLIER_PROGRESS=0.01
 DRIFT_MULTIPLIER_CAP=1.5

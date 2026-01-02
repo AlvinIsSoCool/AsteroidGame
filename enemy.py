@@ -30,9 +30,9 @@ class Enemy(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect(center=(x, y))
 		self.drift = random.uniform(-0.5, 0.5) * drift_multiplier if self.is_big else random.uniform(-0.6, 0.6) * drift_multiplier
 
-	def update(self):
-		self.rect.x += self.drift
-		self.rect.y += self.speed
+	def update(self, dt):
+		self.rect.x += self.drift * dt
+		self.rect.y += self.speed * dt
 
 		if self.rect.top > settings.HEIGHT:
 			self.kill()

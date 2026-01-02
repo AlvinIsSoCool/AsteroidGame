@@ -18,17 +18,26 @@ class Player(pygame.sprite.Sprite):
 			(11, 12) #Bottom-right point.
 		]
 
-	def update(self, keys):
+	def update(self, dt, keys):
 		self.old_rect.center = self.rect.center
 
+        dx = dy = 0
 		if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-			self.rect.x += self.speed
+			dx = 1
 		elif keys[pygame.K_a] or keys[pygame.K_LEFT]:
-			self.rect.x -= self.speed
+			dx = -1
 		elif keys[pygame.K_s] or keys[pygame.K_DOWN]:
-			self.rect.y += self.speed
+			dy = 1
 		elif keys[pygame.K_w] or keys[pygame.K_UP]:
-			self.rect.y -= self.speed
+			dy = -1
+
+        if dx == 0 and dy == 0:
+            return
+
+        if dx != 0:
+            self.rect.x += dx * self.speed * dt
+        elif dy != 0:
+            self.rect.y += dy * self.speed * dt
 
 		self.rect.clamp_ip(pygame.Rect(0, 0, settings.WIDTH, settings.HEIGHT))
 

@@ -142,7 +142,7 @@ class Game:
 		self.all_sprites.add(self.player)
 		self.set_state(GameState.PLAYING, True, True)
 
-	def update(self):
+	def update(self, dt):
 		if not self.running or self.state != GameState.PLAYING:
 			return
 		keys = pygame.key.get_pressed()
@@ -150,9 +150,9 @@ class Game:
 		for sprite in self.all_sprites:
 			if hasattr(sprite, 'update'):
 				if sprite == self.player:
-					sprite.update(keys)
+					sprite.update(dt, keys)
 				else:
-					sprite.update()
+					sprite.update(dt)
 
 		self.spawn_enemies()
 
@@ -230,10 +230,11 @@ class Game:
 
 	def run(self):
 		while self.running:
+		    dt = self.clock.tick(self.fps) / 1000
 			self.handle_events()
-			self.update()
+			self.update(dt)
 			self.draw()
-			self.clock.tick(self.fps)
+			
 			self.frame_count += 1
 
 		pygame.quit()

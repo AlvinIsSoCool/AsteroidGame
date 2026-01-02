@@ -17,11 +17,13 @@ class Bullet(pygame.sprite.Sprite):
 		drift_multiplier = min(settings.BASE_DRIFT + (minutes_played * settings.DRIFT_MULTIPLIER_PROGRESS), settings.DRIFT_MULTIPLIER_CAP)
 		print(f"Bullet Speed Multiplier: {speed_multiplier}")
 		print(f"Bullet Drift Multiplier: {drift_multiplier}")
-		self.speed = random.uniform(-2.5, -5.0) * speed_multiplier
-		self.drift = random.uniform(-0.25, 0.25) * drift_multiplier
+		self.speed = random.uniform(2.5, 5.0) * speed_multiplier
+		self.drift = random.uniform(-0.1, 0.1) * drift_multiplier
 
-	def update(self):
-		self.rect.y += self.speed
+	def update(self, dt):
+	    self.rect.x += self.drift * dt
+		self.rect.y -= self.speed * dt
+
 		if self.rect.bottom < 0:
 			self.kill()
 

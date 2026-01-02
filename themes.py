@@ -28,9 +28,7 @@ class Theme:
 		return self.font(key).size(text)
 
 	def get_text_width(self, key, text):
-		len = self.get_text_size(key, text)[0]
-		print(f"Length: {len}")
-		return len
+		return self.get_text_size(key, text)[0]
 
 	def get_text_height(self, key, text):
 		return self.get_text_size(key, text)[1]

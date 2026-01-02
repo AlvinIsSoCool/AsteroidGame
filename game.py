@@ -53,12 +53,12 @@ class Game:
 		self.score_changed = True
 		self.score = 0
 		self.high_score = 0
-		self.lives = settings.LIVES
+		self.lives = min(100, settings.LIVES)
 		self.enemy_last_spawn = 0
 		self.bullet_last_spawn = 0
 		self.last_hit = 0
-		self.invincible_duration = 1500
-		self.bullet_spawn_delay = 400
+		self.invincible_duration = 1000
+		self.bullet_spawn_delay = 250
 		self.enemy_spawn_delay = settings.ENEMY_SPAWN_DELAY
 
 	def handle_events(self):
@@ -88,22 +88,13 @@ class Game:
 				if self.state == GameState.PLAYING:
 					self.shoot_bullet()
 
-			if event.type == pygame.WINDOWFOCUSLOST:
+			if event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
 				print("Window lost focus.")
 				self.set_state(GameState.PAUSED)
 				self.fps /= 4
 
-			if event.type == pygame.WINDOWFOCUSGAINED:
+			if event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
 				print("Window gained focus.")
-				self.fps = settings.FPS
-
-			if event.type == pygame.WINDOWMINIMIZED:
-				print("Window minimized.")
-				self.set_state(GameState.PAUSED)
-				self.fps /= 4
-
-			if event.type == pygame.WINDOWRESTORED:
-				print("Window restored.")
 				self.fps = settings.FPS
 
 			self.event_count += 1
@@ -113,11 +104,12 @@ class Game:
 		current_time = pygame.time.get_ticks()
 		elapsed_ms = current_time - self.game_start_time
 		minutes_played = elapsed_ms / 60000
-		speed_multiplier = min(settings.BASE_SPEED + (minutes_played * settings.SPEED_MULTIPLIER_PROGRESS), settings.SPEED_MULTIPLIER_CAP)
-		self.enemy_spawn_delay = max(300, self.enemy_spawn_delay / speed_multiplier)
+		speed_multiplier = 1.0 #min(settings.BASE_SPEED + (minutes_played * settings.SPEED_MULTIPLIER_PROGRESS), settings.SPEED_MULTIPLIER_CAP)
+		self.enemy_spawn_delay = max(250, self.enemy_spawn_delay / speed_multiplier)
+		print(f"Enemy Spawn Delay: {self.enemy_spawn_delay}")
 
 		if (current_time - self.enemy_last_spawn) > self.enemy_spawn_delay:
-			enemy = Enemy(random.randint(5, 315), -20, self.theme, elapsed_ms)
+			enemy = Enemy(random.randint(5, 315), -15, self.theme, elapsed_ms)
 			self.all_sprites.add(enemy)
 			self.enemies.add(enemy)
 			self.enemy_last_spawn = current_time

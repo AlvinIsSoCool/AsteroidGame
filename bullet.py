@@ -6,18 +6,19 @@ class Bullet(pygame.sprite.Sprite):
 	def __init__(self, x, y, theme, elapsed_ms=0):
 		super().__init__()
 		self.theme = theme
-		self.image = pygame.Surface((5, 5), pygame.SRCALPHA)
+		self.image = pygame.Surface((7, 7), pygame.SRCALPHA)
 		self.image.fill((0, 0, 0, 0))
 		self.color = (100, 255, 255)
-		pygame.draw.rect(self.image, self.color, (0, 0, 5, 5))
+		pygame.draw.rect(self.image, self.color, (0, 0, 7, 7))
 
 		self.rect = self.image.get_rect(center=(x, y))
 		minutes_played = elapsed_ms / 60000
 		speed_multiplier = min(settings.BASE_SPEED + (minutes_played * settings.SPEED_MULTIPLIER_PROGRESS), settings.SPEED_MULTIPLIER_CAP)
 		drift_multiplier = min(settings.BASE_DRIFT + (minutes_played * settings.DRIFT_MULTIPLIER_PROGRESS), settings.DRIFT_MULTIPLIER_CAP)
-		self.speed = random.uniform(-2.0, -4.0) * speed_multiplier
-		self.drift = random.uniform(-0.3, 0.3) * drift_multiplier
-		self.growing = True
+		print(f"Bullet Speed Multiplier: {speed_multiplier}")
+		print(f"Bullet Drift Multiplier: {drift_multiplier}")
+		self.speed = random.uniform(-2.5, -5.0) * speed_multiplier
+		self.drift = random.uniform(-0.25, 0.25) * drift_multiplier
 
 	def update(self):
 		self.rect.y += self.speed

@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import settings
+import math
 
 from overlay import GlobalOverlayHandler, LocalOverlayHandler
 from player import Player
@@ -29,7 +30,6 @@ class Game:
 		self.theme = random.choice(THEMES)
 		self.overlay_global = GlobalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
 		self.overlay_local = LocalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
-		print(f"Theme: {self.theme.name}")
 
 		self.set_state(GameState.START, True, True)
 
@@ -39,7 +39,7 @@ class Game:
 		self.event_count = 0
 
 		self.day_duration = settings.DAY_DURATION
-		self.day_length = self.day_duration * self.fps * 2
+		self.day_length = self.day_duration * self.fps
 		self.is_day = True if self.theme.name == LIGHT_THEME.name else False
 		self.cycle_time = 0 if self.is_day else self.day_length // 2
 
@@ -54,9 +54,9 @@ class Game:
 		self.score = 0
 		self.high_score = 0
 		self.lives = min(100, settings.LIVES)
-		self.enemy_last_spawn = 0
-		self.bullet_last_spawn = 0
-		self.last_hit = 0
+		self.enemy_last_spawn = self.game_start_time
+		self.bullet_last_spawn = self.game_start_time
+		self.last_hit = self.game_start_time
 		self.invincible_duration = 1000
 		self.bullet_spawn_delay = 250
 		self.enemy_spawn_delay = settings.ENEMY_SPAWN_DELAY
@@ -89,26 +89,22 @@ class Game:
 					self.shoot_bullet()
 
 			if event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
-				print("Window lost focus.")
 				self.set_state(GameState.PAUSED)
 				self.fps /= 4
 
 			if event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
-				print("Window gained focus.")
 				self.fps = settings.FPS
 
 			self.event_count += 1
-			#print(f"Event Count: {self.event_count}")'''
 
 	def spawn_enemies(self):
 		current_time = pygame.time.get_ticks()
 		elapsed_ms = current_time - self.game_start_time
 		minutes_played = elapsed_ms / 60000
-		speed_multiplier = 1.0 #min(settings.BASE_SPEED + (minutes_played * settings.SPEED_MULTIPLIER_PROGRESS), settings.SPEED_MULTIPLIER_CAP)
-		self.enemy_spawn_delay = max(250, self.enemy_spawn_delay / speed_multiplier)
-		print(f"Enemy Spawn Delay: {self.enemy_spawn_delay}")
 
 		if (current_time - self.enemy_last_spawn) > self.enemy_spawn_delay:
+			speed_multiplier = min(settings.BASE_SPEED + (minutes_played * (settings.SPEED_MULTIPLIER_PROGRESS / 4)), 1.1)
+			self.enemy_spawn_delay = max(250, self.enemy_spawn_delay / speed_multiplier)
 			enemy = Enemy(random.randint(5, 315), -15, self.theme, elapsed_ms)
 			self.all_sprites.add(enemy)
 			self.enemies.add(enemy)
@@ -134,7 +130,9 @@ class Game:
 		self.game_start_time = pygame.time.get_ticks()
 		self.score = 0
 		self.lives = settings.LIVES
-		self.last_spawn = 0
+		self.enemy_last_spawn = self.game_start_time
+		self.bullet_last_spawn = self.game_start_time
+		self.last_hit = self.game_start_time
 		self.score_changed = True
 		self.lives_changed = True
 
@@ -171,7 +169,6 @@ class Game:
 			if hits:
 				if self.lives != -1:
 					self.lives -= 1
-					print(f"Lives left: {self.lives}")
 					if self.lives <= 0:
 						self.set_state(GameState.GAME_OVER, True)
 
@@ -187,7 +184,6 @@ class Game:
 			self.overlay_global.on_theme_change(self.theme)
 
 		self.update_count += 1
-		#print(f"Update Count: {self.update_count}")
 
 	def draw(self):
 		self.screen.fill(self.theme.color("background"))
@@ -230,11 +226,11 @@ class Game:
 
 	def run(self):
 		while self.running:
-		    dt = self.clock.tick(self.fps) / 1000
+			dt = min(1/10, self.clock.tick(self.fps) / 1000)
 			self.handle_events()
 			self.update(dt)
 			self.draw()
-			
+
 			self.frame_count += 1
 
 		pygame.quit()

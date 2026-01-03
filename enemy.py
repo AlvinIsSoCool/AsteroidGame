@@ -10,25 +10,23 @@ class Enemy(pygame.sprite.Sprite):
 		minutes_played = elapsed_ms / 60000
 		speed_multiplier = min(settings.BASE_SPEED + (minutes_played * settings.SPEED_MULTIPLIER_PROGRESS), settings.SPEED_MULTIPLIER_CAP)
 		drift_multiplier = min(settings.BASE_DRIFT + (minutes_played * settings.DRIFT_MULTIPLIER_PROGRESS), settings.DRIFT_MULTIPLIER_CAP)
-		print(f"Enemy Speed Multiplier: {speed_multiplier}")
-		print(f"Enemy Drift Multiplier: {drift_multiplier}")
 
 		if self.is_big:
 			self.size = 18
 			self.color = (180, 100, 80)
 			self.score = 20
-			self.speed = random.uniform(0.5, 1.5) * speed_multiplier
+			self.speed = random.uniform(45.0, 80.0) * speed_multiplier
 		else:
 			self.size = 14
 			self.color = (220, 140, 100)
 			self.score = 10
-			self.speed = random.uniform(1.5, 3.0) * speed_multiplier
+			self.speed = random.uniform(100.0, 200.0) * speed_multiplier
 
 		self.image = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
 		self.image.fill((0, 0, 0, 0))
 
 		self.rect = self.image.get_rect(center=(x, y))
-		self.drift = random.uniform(-0.5, 0.5) * drift_multiplier if self.is_big else random.uniform(-0.6, 0.6) * drift_multiplier
+		self.drift = random.uniform(-10.0, 10.0) * drift_multiplier if self.is_big else random.uniform(-20.0, 20.0) * drift_multiplier
 
 	def update(self, dt):
 		self.rect.x += self.drift * dt

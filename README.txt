@@ -7,8 +7,17 @@ How to Run
 To run the game, you need python and the pygame package to be installed.
 
 To install pygame, use the following command:
-
 -> pip install pygame OR python -m pip install pygame
+
+NOTE: Skip installation of python, if it is already installed. 
+              Skip the above step, if pygame is installed.
+
+Once python and pygame is installed, 
+
+Use the following command to run the game:
+-> python main.py
+
+Or: double-click the main.py file or right-click and execute.
 
 How to Play
 ==========

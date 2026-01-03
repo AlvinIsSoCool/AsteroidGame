@@ -92,11 +92,14 @@ class LocalOverlayHandler(OverlayHandler):
 
 		lives = game.lives
 		high_score = game.high_score
+
 		lives_len = self.theme.get_text_width("medium", str(lives))
 		high_score_len = self.theme.get_text_width("medium", str(high_score))
 		space_len = self.theme.get_text_width("medium", " ")
+
 		high_score_text = f"{'High Score:':<12}{high_score}"
 		high_score_text = high_score_text + " " * (lives_len // space_len) if high_score_len < lives_len else high_score_text
+
 		text1 = self.theme.font("medium").render(f"{'Score:':<15}{game.score}", True, self.theme.color("text_secondary"))
 		text2 = self.theme.font("medium").render(high_score_text, True, self.theme.color("text_secondary"))
 		text3 = self.theme.font("medium").render(f"{'Lives:':<16}{lives}", True, self.theme.color("text_secondary"))

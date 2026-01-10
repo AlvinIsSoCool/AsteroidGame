@@ -88,33 +88,30 @@ class Game:
 				if self.state == GameState.PLAYING:
 					self.shoot_bullet()
 
-			if self.is_window_focused_or_restored(event):
-				self.fps = settings.FPS
-				print("Window is focused or active.")
-			else:
-				self.fps /= 4
-				print("Window is not focused or active.")
+			active = self.is_window_active(event)
+			if active is not None:
+				if active:
+					self.fps = settings.FPS
+					print("Window is focused or active.")
+				else:
+					self.fps /= 4
+					print("Window is not focused or active.")
 
 			self.event_count += 1
 
-	# TODO: Fix.
-	def is_window_focused_or_restored(self, event):
+	def is_window_active(self, event):
 		if hasattr(pygame, 'WINDOWFOCUSLOST'):
+			if event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
+				return True
 			if event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
 				return False
-			elif event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
-				return True
+
 		elif event.type == pygame.ACTIVEEVENT:
 			if event.state == 2:
-				if event.gain == 0:
-					return True
-				else:
-					return False
-			elif event.state == 4:
-				if event.gain == 1:
-					return True
-				else:
-					return False
+				return bool(event.gain)
+			if event.state == 4:
+				return not bool(event.gain)
+
 		else:
 			return None
 

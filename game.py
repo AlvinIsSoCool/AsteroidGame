@@ -8,7 +8,6 @@ from overlay import GlobalOverlayHandler, LocalOverlayHandler
 from player import Player
 from enemy import Enemy
 from bullet import Bullet
-#from enum import Enum, auto
 from themes import THEMES, DARK_THEME, LIGHT_THEME
 
 class GameState:
@@ -21,7 +20,7 @@ class Game:
 	def __init__(self):
 		pygame.init()
 		self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
-		pygame.display.set_caption("Asteroid Game v1.0.0")
+		pygame.display.set_caption("Asteroid Game v1.1.0")
 
 		self.fps = settings.FPS
 		self.clock = pygame.time.Clock()
@@ -94,7 +93,8 @@ class Game:
 					self.fps = settings.FPS
 					print("Window is focused or active.")
 				else:
-					self.fps /= 4
+					self.fps //= 4
+					self.set_state(GameState.PAUSED)
 					print("Window is not focused or active.")
 
 			self.event_count += 1
@@ -105,13 +105,15 @@ class Game:
 				return True
 			if event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
 				return False
-
 		elif event.type == pygame.ACTIVEEVENT:
-			if event.state == 2:
-				return bool(event.gain)
-			if event.state == 4:
-				return not bool(event.gain)
-
+			if event.state == 1 and event.gain == 1:
+				return True # Mouse entry.
+			if event.state == 2 and event.gain == 0:
+				return False # Focus loss.
+		elif event.type in (pygame.KEYDOWN, pygame.KEYUP):
+			return True # Key click. (when paused; checks focus received)
+		elif event.type == pygame.VIDEOEXPOSE:
+			return True # Window Repaint.
 		else:
 			return None
 
@@ -231,7 +233,7 @@ class Game:
 		self.draw_count += 1
 
 	def set_state(self, state, force=False, refresh=False):
-		if (state != self.state and isinstance(state, GameState)) and (force or not self.overlay_global.active) or refresh:
+		if state != self.state and (force or not self.overlay_global.active) or refresh:
 			self.state = state
 			self.overlay_global.reset()
 
@@ -244,7 +246,7 @@ class Game:
 
 	def run(self):
 		while self.running:
-			dt = min(1/10, self.clock.tick(self.fps) / 1000)
+			dt = min(1.0 / 10.0, self.clock.tick(self.fps) / 1000.0)
 			self.handle_events()
 			self.update(dt)
 			self.draw()

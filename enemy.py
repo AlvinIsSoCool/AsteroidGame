@@ -4,7 +4,7 @@ import settings
 
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self, x, y, theme, elapsed_ms=0):
-		super().__init__()
+		super(Enemy, self).__init__()
 		self.theme = theme
 		self.is_big = random.random() < 0.25
 		minutes_played = elapsed_ms / 60000

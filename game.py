@@ -8,14 +8,14 @@ from overlay import GlobalOverlayHandler, LocalOverlayHandler
 from player import Player
 from enemy import Enemy
 from bullet import Bullet
-from enum import Enum, auto
+#from enum import Enum, auto
 from themes import THEMES, DARK_THEME, LIGHT_THEME
 
-class GameState(Enum):
-	START = auto(),
-	PAUSED = auto(),
-	PLAYING = auto(),
-	GAME_OVER = auto()
+class GameState:
+	START = 1,
+	PAUSED = 2,
+	PLAYING = 3,
+	GAME_OVER = 4
 
 class Game:
 	def __init__(self):
@@ -28,8 +28,8 @@ class Game:
 		self.running = True
 		self.state = None
 		self.theme = random.choice(THEMES)
-		self.overlay_global = GlobalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
-		self.overlay_local = LocalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
+		self.overlay_global = GlobalOverlayHandler(pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA), self.theme)
+		self.overlay_local = LocalOverlayHandler(pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA), self.theme)
 
 		self.set_state(GameState.START, True, True)
 
@@ -88,14 +88,35 @@ class Game:
 				if self.state == GameState.PLAYING:
 					self.shoot_bullet()
 
-			if event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
-				self.set_state(GameState.PAUSED)
-				self.fps /= 4
-
-			if event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
+			if self.is_window_focused_or_restored(event):
 				self.fps = settings.FPS
+				print("Window is focused or active.")
+			else:
+				self.fps /= 4
+				print("Window is not focused or active.")
 
 			self.event_count += 1
+
+	# TODO: Fix.
+	def is_window_focused_or_restored(self, event):
+		if hasattr(pygame, 'WINDOWFOCUSLOST'):
+			if event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
+				return False
+			elif event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
+				return True
+		elif event.type == pygame.ACTIVEEVENT:
+			if event.state == 2:
+				if event.gain == 0:
+					return True
+				else:
+					return False
+			elif event.state == 4:
+				if event.gain == 1:
+					return True
+				else:
+					return False
+		else:
+			return None
 
 	def spawn_enemies(self):
 		current_time = pygame.time.get_ticks()

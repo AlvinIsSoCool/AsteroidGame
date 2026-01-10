@@ -4,7 +4,7 @@ import settings
 
 class Bullet(pygame.sprite.Sprite):
 	def __init__(self, x, y, theme, elapsed_ms=0):
-		super().__init__()
+		super(Bullet, self).__init__()
 		self.theme = theme
 		self.image = pygame.Surface((7, 7), pygame.SRCALPHA)
 		self.image.fill((0, 0, 0, 0))

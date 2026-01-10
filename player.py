@@ -3,7 +3,7 @@ import settings
 
 class Player(pygame.sprite.Sprite):
 	def __init__(self, x, y, theme):
-		super().__init__()
+		super(Player, self).__init__()
 
 		self.image = pygame.Surface((14, 14), pygame.SRCALPHA)
 		self.image.fill((0, 0, 0, 0))

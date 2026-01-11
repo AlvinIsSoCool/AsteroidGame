@@ -3,7 +3,7 @@ import pygame
 __all__ = ["Theme", "THEMES", "DARK_THEME", "LIGHT_THEME"]
 
 class Theme:
-	def __init__(self, *, name, colors, fonts):
+	def __init__(self, name, colors, fonts):
 		self.name = name
 		self.colors = colors
 		self.font_defs = fonts

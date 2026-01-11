@@ -8,28 +8,27 @@ from overlay import GlobalOverlayHandler, LocalOverlayHandler
 from player import Player
 from enemy import Enemy
 from bullet import Bullet
-from enum import Enum, auto
 from themes import THEMES, DARK_THEME, LIGHT_THEME
 
-class GameState(Enum):
-	START = auto(),
-	PAUSED = auto(),
-	PLAYING = auto(),
-	GAME_OVER = auto()
+class GameState:
+	START = 1,
+	PAUSED = 2,
+	PLAYING = 3,
+	GAME_OVER = 4
 
 class Game:
 	def __init__(self):
 		pygame.init()
 		self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
-		pygame.display.set_caption("Asteroid Game v1.0.0")
+		pygame.display.set_caption("Asteroid Game v1.1.1")
 
 		self.fps = settings.FPS
 		self.clock = pygame.time.Clock()
 		self.running = True
 		self.state = None
 		self.theme = random.choice(THEMES)
-		self.overlay_global = GlobalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
-		self.overlay_local = LocalOverlayHandler(pygame.Surface((settings.WIDTH + 1, settings.HEIGHT + 1), pygame.SRCALPHA).convert_alpha(), self.theme)
+		self.overlay_global = GlobalOverlayHandler(pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA), self.theme)
+		self.overlay_local = LocalOverlayHandler(pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA), self.theme)
 
 		self.set_state(GameState.START, True, True)
 
@@ -66,6 +65,14 @@ class Game:
 			if event.type == pygame.QUIT:
 				self.running = False
 
+			active = self.is_window_active(event)
+			if active is not None:
+				if active:
+					self.fps = settings.FPS
+				else:
+					self.fps = 15
+					self.set_state(GameState.PAUSED)
+
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_q:
 					if self.state != GameState.PLAYING:
@@ -88,14 +95,28 @@ class Game:
 				if self.state == GameState.PLAYING:
 					self.shoot_bullet()
 
-			if event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
-				self.set_state(GameState.PAUSED)
-				self.fps /= 4
-
-			if event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
-				self.fps = settings.FPS
-
 			self.event_count += 1
+
+	def is_window_active(self, event):
+		if hasattr(pygame, 'WINDOWFOCUSLOST'):
+			if event.type in (pygame.WINDOWFOCUSGAINED, pygame.WINDOWRESTORED):
+				return True
+			elif event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
+				return False
+		elif event.type == pygame.ACTIVEEVENT:
+			if event.state == 1:
+				if event.gain == 1 and self.state != GameState.PLAYING:
+					return True # Mouse entry.
+				elif event.gain == 0 and self.state != GameState.PLAYING:
+					return False # Mouse exit.
+			elif event.state == 2 and event.gain == 0:
+				return False # Focus loss.
+		elif event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN) and self.state != GameState.PLAYING:
+			return True # Key/Mouse click. (when paused; checks focus received)
+		elif event.type == pygame.VIDEOEXPOSE:
+			return True # Window Repaint.
+		else:
+			return None
 
 	def spawn_enemies(self):
 		current_time = pygame.time.get_ticks()
@@ -103,8 +124,8 @@ class Game:
 		minutes_played = elapsed_ms / 60000
 
 		if (current_time - self.enemy_last_spawn) > self.enemy_spawn_delay:
-			speed_multiplier = min(settings.BASE_SPEED + (minutes_played * (settings.SPEED_MULTIPLIER_PROGRESS / 4)), 1.1)
-			self.enemy_spawn_delay = max(250, self.enemy_spawn_delay / speed_multiplier)
+			speed_multiplier = min(settings.BASE_SPEED + (minutes_played * (settings.SPEED_MULTIPLIER_PROGRESS / 4)), 1.25)
+			self.enemy_spawn_delay = max(200, self.enemy_spawn_delay / speed_multiplier)
 			enemy = Enemy(random.randint(5, 315), -15, self.theme, elapsed_ms)
 			self.all_sprites.add(enemy)
 			self.enemies.add(enemy)
@@ -140,6 +161,12 @@ class Game:
 		self.all_sprites.add(self.player)
 		self.set_state(GameState.PLAYING, True, True)
 
+	def change_score(self, score):
+		self.score += score
+		if self.score > self.high_score:
+			self.high_score = self.score
+		self.score_changed = True
+
 	def update(self, dt):
 		if not self.running or self.state != GameState.PLAYING:
 			return
@@ -158,10 +185,7 @@ class Game:
 		for bullet, hit_enemies in hits.items():
 			for enemy in hit_enemies:
 				if self.lives != -1:
-					self.score += enemy.score
-					if self.score > self.high_score:
-						self.high_score = self.score
-					self.score_changed = True
+					self.change_score(enemy.score)
 
 		current_time = pygame.time.get_ticks()
 		if (current_time - self.last_hit) > self.invincible_duration:
@@ -213,7 +237,7 @@ class Game:
 		self.draw_count += 1
 
 	def set_state(self, state, force=False, refresh=False):
-		if (state != self.state and isinstance(state, GameState)) and (force or not self.overlay_global.active) or refresh:
+		if state != self.state and (force or not self.overlay_global.active) or refresh:
 			self.state = state
 			self.overlay_global.reset()
 
@@ -226,7 +250,7 @@ class Game:
 
 	def run(self):
 		while self.running:
-			dt = min(1/10, self.clock.tick(self.fps) / 1000)
+			dt = min(1.0 / 10.0, self.clock.tick(self.fps) / 1000.0)
 			self.handle_events()
 			self.update(dt)
 			self.draw()

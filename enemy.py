@@ -4,7 +4,8 @@ import settings
 
 class Enemy(pygame.sprite.Sprite):
 	def __init__(self, x, y, theme, elapsed_ms=0):
-		super().__init__()
+		pygame.sprite.Sprite.__init__(self)
+
 		self.theme = theme
 		self.is_big = random.random() < 0.25
 		minutes_played = elapsed_ms / 60000
@@ -34,6 +35,8 @@ class Enemy(pygame.sprite.Sprite):
 
 		if self.rect.top > settings.HEIGHT:
 			self.kill()
+
+		self.rect.clamp_ip(pygame.Rect(0, -20, settings.WIDTH, settings.HEIGHT + 40))
 
 	def draw(self, surface):
 		if self.theme:

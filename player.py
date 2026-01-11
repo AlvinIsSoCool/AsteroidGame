@@ -3,13 +3,12 @@ import settings
 
 class Player(pygame.sprite.Sprite):
 	def __init__(self, x, y, theme):
-		super().__init__()
+		pygame.sprite.Sprite.__init__(self)
 
 		self.image = pygame.Surface((14, 14), pygame.SRCALPHA)
 		self.image.fill((0, 0, 0, 0))
 
 		self.rect = self.image.get_rect(center=(x, y))
-		self.old_rect = self.rect.copy()
 		self.theme = theme
 		self.speed = 200
 		self.triangle_points = [
@@ -19,8 +18,6 @@ class Player(pygame.sprite.Sprite):
 		]
 
 	def update(self, dt, keys):
-		self.old_rect.center = self.rect.center
-
 		dx = dy = 0
 		if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
 			dx = 1
